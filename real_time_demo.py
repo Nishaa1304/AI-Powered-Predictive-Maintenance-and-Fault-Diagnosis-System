@@ -53,18 +53,18 @@ class RealTimeDemoSystem:
         self.orchestrator = AgentOrchestrator()
         
         # Register all agents
-        agents = [
-            DataAnalysisAgent(),
-            DiagnosisAgent(),
-            CustomerEngagementAgent(),
-            SchedulingAgent(),
-            FeedbackAgent(),
-            ManufacturingInsightsAgent(),
-            UEBAAgent()
-        ]
+        agents = {
+            "data_analysis": DataAnalysisAgent(),
+            "diagnosis": DiagnosisAgent(),
+            "customer_engagement": CustomerEngagementAgent(),
+            "scheduling": SchedulingAgent(),
+            "feedback": FeedbackAgent(),
+            "manufacturing_insights": ManufacturingInsightsAgent(),
+            "ueba": UEBAAgent()
+        }
         
-        for agent in agents:
-            await self.orchestrator.register_agent(agent)
+        for agent_type, agent in agents.items():
+            self.orchestrator.register_agent(agent_type, agent)
             print(f"✅ {agent.agent_name} registered")
         
         # Start all agents

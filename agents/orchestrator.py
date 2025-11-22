@@ -124,6 +124,42 @@ class AgentOrchestrator:
         else:
             self.logger.error(f"No agent found for task type: {task_type}")
     
+    def get_agent(self, agent_type: str) -> Optional[Any]:
+        """Get a specific agent by type"""
+        return self.agents.get(agent_type)
+    
+    async def route_task(self, agent_name: str, task_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Route a task directly to a specific agent by name
+        This is a simplified interface for direct agent communication
+        """
+        # Map agent class names to registered agent types
+        agent_mapping = {
+            "DataAnalysisAgent": "data_analysis",
+            "DiagnosisAgent": "diagnosis",
+            "CustomerEngagementAgent": "customer_engagement",
+            "SchedulingAgent": "scheduling",
+            "FeedbackAgent": "feedback",
+            "ManufacturingInsightsAgent": "manufacturing_insights",
+            "UEBAAgent": "ueba"
+        }
+        
+        agent_type = agent_mapping.get(agent_name)
+        if not agent_type or agent_type not in self.agents:
+            self.logger.error(f"Agent {agent_name} not found")
+            return {"status": "error", "message": f"Agent {agent_name} not found"}
+        
+        agent = self.agents[agent_type]
+        
+        try:
+            self.logger.info(f"Routing task to {agent_name}")
+            result = await agent.process_task(task_data)
+            self.logger.info(f"Task completed by {agent_name}")
+            return result
+        except Exception as e:
+            self.logger.error(f"Error in {agent_name}: {str(e)}")
+            return {"status": "error", "message": str(e)}
+    
     def get_system_status(self) -> Dict[str, Any]:
         """Get status of all agents"""
         status = {
