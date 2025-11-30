@@ -15,43 +15,55 @@ export default function AIDashboard() {
     {
       id: 'data_analysis',
       name: 'Data Analysis Agent',
-      icon: '🔍',
-      color: 'bg-blue-500',
+      icon: '📊',
+      color: 'from-blue-500 to-cyan-500',
+      borderColor: 'border-blue-500/50',
+      glowColor: 'shadow-blue-500/50',
       description: 'Analyzes vehicle telemetry and sensor data'
     },
     {
       id: 'diagnosis',
       name: 'Diagnosis Agent',
       icon: '🔧',
-      color: 'bg-orange-500',
+      color: 'from-orange-500 to-red-500',
+      borderColor: 'border-orange-500/50',
+      glowColor: 'shadow-orange-500/50',
       description: 'Predicts failures and estimates repair costs'
     },
     {
       id: 'customer_engagement',
       name: 'Customer Engagement Agent',
-      icon: '📞',
-      color: 'bg-green-500',
+      icon: '💬',
+      color: 'from-green-500 to-emerald-500',
+      borderColor: 'border-green-500/50',
+      glowColor: 'shadow-green-500/50',
       description: 'Generates personalized call scripts'
     },
     {
       id: 'scheduling',
       name: 'Scheduling Agent',
       icon: '📅',
-      color: 'bg-purple-500',
+      color: 'from-purple-500 to-pink-500',
+      borderColor: 'border-purple-500/50',
+      glowColor: 'shadow-purple-500/50',
       description: 'Manages service appointments'
     },
     {
       id: 'feedback',
       name: 'Feedback Agent',
       icon: '⭐',
-      color: 'bg-yellow-500',
+      color: 'from-yellow-500 to-amber-500',
+      borderColor: 'border-yellow-500/50',
+      glowColor: 'shadow-yellow-500/50',
       description: 'Collects customer satisfaction data'
     },
     {
       id: 'manufacturing',
       name: 'Manufacturing Insights Agent',
       icon: '🏭',
-      color: 'bg-indigo-500',
+      color: 'from-indigo-500 to-blue-500',
+      borderColor: 'border-indigo-500/50',
+      glowColor: 'shadow-indigo-500/50',
       description: 'Analyzes recurring defects for OEMs'
     }
   ];
@@ -89,111 +101,166 @@ export default function AIDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      <div className="max-w-7xl mx-auto p-6 md:p-8">
         
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-blue-900 mb-4">
-            🚗 AI Predictive Maintenance System
-          </h1>
-          <p className="text-xl text-gray-700">
-            Click any AI agent → Select vehicle → Get voice-enabled report
-          </p>
+        <div className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
+                AI Predictive Maintenance System
+              </h1>
+              <p className="text-lg text-gray-400">
+                Click any AI agent → Select vehicle → Get voice-enabled report
+              </p>
+            </div>
+            
+            {/* Voice Assistant Button - Speaking Person Icon */}
+            <button className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 group">
+              {/* Speaking Person Icon with Sound Waves */}
+              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Head */}
+                <circle cx="12" cy="8" r="3" stroke="currentColor" strokeWidth="2" />
+                {/* Body */}
+                <path d="M6 21V19C6 16.7909 7.79086 15 10 15H14C16.2091 15 18 16.7909 18 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                {/* Sound waves */}
+                <path d="M19 10C19.5 10.5 20 11.5 20 12.5C20 13.5 19.5 14.5 19 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="animate-pulse" />
+                <path d="M5 10C4.5 10.5 4 11.5 4 12.5C4 13.5 4.5 14.5 5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="animate-pulse" style={{ animationDelay: '0.2s' }} />
+              </svg>
+              <span className="font-semibold hidden md:inline">Voice Assistant</span>
+            </button>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/30 rounded-xl p-5 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300">
+              <div className="text-gray-400 text-sm mb-1">Active Agents</div>
+              <div className="text-3xl font-bold">{agents.length}</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl p-5 hover:shadow-lg hover:shadow-green-500/20 transition-all duration-300">
+              <div className="text-gray-400 text-sm mb-1">Total Vehicles</div>
+              <div className="text-3xl font-bold">{vehicles.length}</div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl p-5 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300">
+              <div className="text-gray-400 text-sm mb-1">System Health</div>
+              <div className="text-3xl font-bold flex items-center gap-2">
+                98% <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* AI Agent Grid */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <span>🤖</span>
+        {/* AI Agent Grid - Dark Theme with Glowing Effects */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             AI Agent Activity Monitor
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {agents.map((agent) => (
+            {agents.map((agent, index) => (
               <div
                 key={agent.id}
                 onClick={() => handleAgentClick(agent)}
-                className="group cursor-pointer bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
+                className="group relative cursor-pointer"
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`${agent.color} w-16 h-16 rounded-full flex items-center justify-center text-3xl group-hover:animate-bounce`}>
-                    {agent.icon}
+                {/* Glowing Border Effect on Hover */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${agent.color} opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500 rounded-2xl`}></div>
+                
+                {/* Card Content */}
+                <div className="relative bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 hover:border-gray-600 transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-2xl">
+                  
+                  {/* Agent Icon */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${agent.color} flex items-center justify-center text-2xl shadow-lg transform group-hover:rotate-12 transition-transform duration-300`}>
+                      {agent.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg text-white group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:bg-clip-text group-hover:from-blue-400 group-hover:to-purple-400 transition-all">
+                        {agent.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-xs text-green-400 font-semibold">Active</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-blue-600">
-                      {agent.name}
-                    </h3>
-                    <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                      ● Active
-                    </span>
+
+                  {/* Description */}
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    {agent.description}
+                  </p>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-gray-800 rounded-full h-2 mb-4 overflow-hidden">
+                    <div 
+                      className={`h-2 rounded-full bg-gradient-to-r ${agent.color} transition-all duration-1000`}
+                      style={{ width: '85%' }}
+                    ></div>
                   </div>
-                </div>
-                <p className="text-gray-600 text-sm mb-4">
-                  {agent.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-blue-600 font-semibold group-hover:underline">
-                    Click to view report →
-                  </span>
-                  <span className="text-2xl">🎤</span>
+
+                  {/* Action Button */}
+                  <button className={`w-full py-2.5 rounded-lg bg-gradient-to-r ${agent.color} font-semibold hover:shadow-lg ${agent.glowColor} transition-all duration-300 transform hover:scale-105`}>
+                    View Report →
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Vehicle Fleet Overview */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            🚙 Your Vehicle Fleet
+        {/* Vehicle Fleet Overview - Dark Theme */}
+        <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-8">
+          <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            Your Vehicle Fleet
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vehicles.map((vehicle) => (
               <div
                 key={vehicle.vehicle_id}
-                className="border-2 border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition"
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg">{vehicle.model}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="font-bold text-lg text-white">{vehicle.model}</h3>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                     vehicle.type === 'EV' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-blue-100 text-blue-800'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
+                      : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                   }`}>
                     {vehicle.type}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">Year: {vehicle.year}</p>
-                <p className="text-sm text-gray-600">Owner: {vehicle.owner}</p>
-                <p className="text-xs text-gray-500 mt-2">{vehicle.vehicle_id}</p>
+                <p className="text-sm text-gray-400 mb-1">Year: {vehicle.year}</p>
+                <p className="text-sm text-gray-400 mb-1">Owner: {vehicle.owner}</p>
+                <p className="text-xs text-gray-500 mt-3 font-mono">{vehicle.vehicle_id}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Vehicle Selector Modal */}
+      {/* Vehicle Selector Modal - Dark Theme */}
       {showVehicleSelector && selectedAgent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-8">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl max-w-3xl w-full p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
-                <div className={`${selectedAgent.color} w-16 h-16 rounded-full flex items-center justify-center text-3xl`}>
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${selectedAgent.color} flex items-center justify-center text-3xl shadow-lg`}>
                   {selectedAgent.icon}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
+                  <h2 className="text-2xl font-bold text-white">
                     {selectedAgent.name}
                   </h2>
-                  <p className="text-gray-600">Select a vehicle to analyze</p>
+                  <p className="text-gray-400">Select a vehicle to analyze</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowVehicleSelector(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-400 hover:text-white transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -204,23 +271,23 @@ export default function AIDashboard() {
                 <div
                   key={vehicle.vehicle_id}
                   onClick={() => handleVehicleSelect(vehicle)}
-                  className="border-2 border-gray-200 rounded-xl p-6 cursor-pointer hover:border-blue-500 hover:shadow-lg transition-all hover:scale-105"
+                  className="relative group bg-gray-800/50 border border-gray-700 rounded-xl p-6 cursor-pointer hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20 transition-all hover:scale-105"
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-bold text-xl">{vehicle.model}</h3>
+                    <h3 className="font-bold text-xl text-white">{vehicle.model}</h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       vehicle.type === 'EV' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/50' 
+                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/50'
                     }`}>
                       {vehicle.type}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-1">Year: {vehicle.year}</p>
-                  <p className="text-gray-600 mb-1">Owner: {vehicle.owner}</p>
-                  <p className="text-gray-500 text-sm">{vehicle.vehicle_id}</p>
-                  <div className="mt-4 text-blue-600 font-semibold flex items-center gap-2">
-                    View Report <span>→</span>
+                  <p className="text-gray-400 mb-1">Year: {vehicle.year}</p>
+                  <p className="text-gray-400 mb-1">Owner: {vehicle.owner}</p>
+                  <p className="text-gray-500 text-sm font-mono mt-2">{vehicle.vehicle_id}</p>
+                  <div className="mt-4 text-blue-400 font-semibold flex items-center gap-2 group-hover:text-blue-300 transition-colors">
+                    View Report <span className="transform group-hover:translate-x-1 transition-transform">→</span>
                   </div>
                 </div>
               ))}

@@ -110,3 +110,27 @@ temp/
 # OS
 Thumbs.db
 .DS_Store
+
+# Environment variables (contains secrets)
+.env
+.env.local
+.env.production
+
+# Vercel
+.vercel
+frontend/.vercel
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+npm-debug.log*
+

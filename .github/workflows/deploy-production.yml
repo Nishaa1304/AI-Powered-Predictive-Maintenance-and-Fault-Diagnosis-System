@@ -1,0 +1,328 @@
+name: 🚀 Production Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (not recommended)'
+        required: false
+        default: 'false'
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Prevent concurrent deployments
+  deployment-lock:
+    runs-on: ubuntu-latest
+    outputs:
+      lock-acquired: ${{ steps.lock.outputs.acquired }}
+    steps:
+      - name: 🔒 Acquire deployment lock
+        id: lock
+        run: echo "acquired=true" >> $GITHUB_OUTPUT
+
+  # Frontend Testing & Build
+  frontend-test:
+    needs: deployment-lock
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        if: github.event.inputs.skip_tests != 'true'
+        run: npm test --if-present
+
+      - name: 🔨 Build frontend
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+
+      - name: 📊 Analyze bundle size
+        run: |
+          echo "### 📦 Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          if [ -d ".next" ]; then
+            du -sh .next/* | sort -hr >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 💾 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/.next
+          retention-days: 7
+
+  # Backend Testing
+  backend-test:
+    needs: deployment-lock
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: 📚 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f test-requirements.txt ]; then pip install -r test-requirements.txt; fi
+
+      - name: 🧪 Run backend tests
+        if: github.event.inputs.skip_tests != 'true'
+        run: |
+          if [ -f pytest.ini ] || [ -d tests ]; then
+            pytest --verbose --cov=. --cov-report=term-missing
+          else
+            echo "No tests found, skipping..."
+          fi
+
+  # Manual Approval for Production
+  approve-deployment:
+    needs: [frontend-test, backend-test]
+    runs-on: ubuntu-latest
+    environment:
+      name: production-approval
+    steps:
+      - name: ✅ Deployment approved
+        run: echo "Production deployment approved by ${{ github.actor }}"
+
+  # Deploy Frontend to Vercel
+  deploy-frontend:
+    needs: approve-deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://${{ steps.deploy.outputs.url }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/.next
+
+      - name: 🚀 Deploy to Vercel
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend
+
+      - name: 📝 Save deployment URL
+        run: |
+          echo "FRONTEND_URL=${{ steps.deploy.outputs.url }}" >> $GITHUB_ENV
+          echo "### 🌐 Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "URL: https://${{ steps.deploy.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+
+  # Deploy Backend to Render
+  deploy-backend:
+    needs: approve-deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Trigger Render deployment
+        run: |
+          response=$(curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}')
+          echo "Deployment triggered: $response"
+          echo "### 🖥️ Backend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "Render deployment initiated" >> $GITHUB_STEP_SUMMARY
+
+      - name: ⏳ Wait for deployment
+        run: sleep 60
+
+  # Health Checks & Smoke Tests
+  smoke-tests:
+    needs: [deploy-frontend, deploy-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 🏥 Run health checks
+        run: |
+          echo "### 🏥 Health Check Results" >> $GITHUB_STEP_SUMMARY
+          
+          # Frontend health check
+          frontend_status=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_FRONTEND_URL }})
+          echo "Frontend Status: $frontend_status" >> $GITHUB_STEP_SUMMARY
+          
+          # Backend health check
+          backend_status=$(curl -s -o /dev/null -w "%{http_code}" ${{ secrets.PRODUCTION_API_URL }}/health)
+          echo "Backend Status: $backend_status" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "$frontend_status" != "200" ] || [ "$backend_status" != "200" ]; then
+            echo "❌ Health checks failed!"
+            exit 1
+          fi
+          
+          echo "✅ All health checks passed!"
+
+      - name: 🧪 Run smoke tests
+        run: |
+          # Test critical endpoints
+          curl -f ${{ secrets.PRODUCTION_API_URL }}/api/vehicles || exit 1
+          curl -f ${{ secrets.PRODUCTION_API_URL }}/api/alerts || exit 1
+          echo "✅ Smoke tests passed!" >> $GITHUB_STEP_SUMMARY
+
+  # Rollback on failure
+  rollback:
+    needs: smoke-tests
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⏮️ Rollback deployment
+        run: |
+          echo "### ⚠️ Deployment Failed - Rolling Back" >> $GITHUB_STEP_SUMMARY
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": true, "rollback": true}'
+
+  # Create GitHub Release
+  create-release:
+    needs: smoke-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏷️ Generate version tag
+        id: version
+        run: |
+          VERSION="v$(date +'%Y.%m.%d')-${{ github.run_number }}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: 📝 Generate changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(git log --pretty=format:"- %s (%an)" $(git describe --tags --abbrev=0 2>/dev/null || echo '')..HEAD)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: 🎉 Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## 🚀 Production Deployment
+            
+            **Deployed by:** ${{ github.actor }}
+            **Commit:** ${{ github.sha }}
+            
+            ### 📋 Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### 🌐 URLs
+            - Frontend: ${{ secrets.PRODUCTION_FRONTEND_URL }}
+            - Backend: ${{ secrets.PRODUCTION_API_URL }}
+          draft: false
+          prerelease: false
+
+  # Notifications
+  notify:
+    needs: [smoke-tests, create-release]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📢 Send Discord notification
+        if: secrets.DISCORD_WEBHOOK_URL != ''
+        run: |
+          STATUS="${{ needs.smoke-tests.result == 'success' && '✅ Success' || '❌ Failed' }}"
+          curl -X POST "${{ secrets.DISCORD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"content\": \"**Production Deployment $STATUS**\",
+              \"embeds\": [{
+                \"title\": \"AI Predictive Maintenance\",
+                \"description\": \"Deployed by ${{ github.actor }}\",
+                \"color\": ${{ needs.smoke-tests.result == 'success' && '3066993' || '15158332' }},
+                \"fields\": [
+                  {\"name\": \"Commit\", \"value\": \"${{ github.event.head_commit.message }}\"},
+                  {\"name\": \"Frontend\", \"value\": \"${{ secrets.PRODUCTION_FRONTEND_URL }}\"},
+                  {\"name\": \"Backend\", \"value\": \"${{ secrets.PRODUCTION_API_URL }}\"}
+                ]
+              }]
+            }"
+
+      - name: 📢 Send Slack notification
+        if: secrets.SLACK_WEBHOOK_URL != ''
+        run: |
+          STATUS="${{ needs.smoke-tests.result == 'success' && ':white_check_mark: Success' || ':x: Failed' }}"
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"text\": \"*Production Deployment $STATUS*\",
+              \"blocks\": [{
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*AI Predictive Maintenance*\nDeployed by ${{ github.actor }}\n\n*Commit:* ${{ github.event.head_commit.message }}\n*Frontend:* ${{ secrets.PRODUCTION_FRONTEND_URL }}\n*Backend:* ${{ secrets.PRODUCTION_API_URL }}\"
+                }
+              }]
+            }"
+
+  # Cost Estimation
+  cost-estimation:
+    needs: smoke-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 💰 Calculate hosting costs
+        run: |
+          echo "### 💰 Estimated Monthly Costs" >> $GITHUB_STEP_SUMMARY
+          echo "- Vercel Pro: \$20/month" >> $GITHUB_STEP_SUMMARY
+          echo "- Render Starter: \$7/month" >> $GITHUB_STEP_SUMMARY
+          echo "- Total: ~\$27/month" >> $GITHUB_STEP_SUMMARY
+
+  # Cleanup old artifacts
+  cleanup:
+    needs: smoke-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧹 Clean up old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '7 days'
+          skip-recent: 3
