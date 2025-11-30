@@ -1,12 +1,27 @@
+# Core FastAPI
 fastapi
 uvicorn[standard]
 pydantic
 python-multipart
+python-dotenv
+
+# OpenAI & AI Libraries
 openai
+langchain
+langchain-openai
+langchain-community
+
+# CrewAI for Agents
+crewai
+crewai-tools
+
+# HTTP Clients
 httpx
 requests
-python-dotenv
-crewai
+
+# Additional Agent Dependencies
+tiktoken
+chromadb
 
 # Utilities
 python-dotenv
