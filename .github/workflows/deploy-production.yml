@@ -4,11 +4,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      skip_tests:
-        description: 'Skip tests (not recommended)'
-        required: false
-        default: 'false'
 
 env:
   NODE_VERSION: '18'
@@ -321,6 +316,11 @@ jobs:
     needs: smoke-tests
     runs-on: ubuntu-latest
     steps:
+      - name: 🧹 Clean up old artifacts
+        uses: c-hive/gha-remove-artifacts@v1
+        with:
+          age: '7 days'
+          skip-recent: 3
       - name: 🧹 Clean up old artifacts
         uses: c-hive/gha-remove-artifacts@v1
         with:
