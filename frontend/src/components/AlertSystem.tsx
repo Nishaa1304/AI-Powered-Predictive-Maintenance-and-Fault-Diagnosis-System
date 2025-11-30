@@ -26,11 +26,11 @@ export interface ActivityLogEntry {
   type: 'data' | 'diagnosis' | 'customer' | 'appointment' | 'security';
 }
 
-export interface Statistics {
-  alertsLastHour: number;
-  vehiclesScheduled: number;
-  callsCompleted: number;
-  manufacturingInsights: number;
+interface Statistics {
+  totalAlerts: number;
+  criticalAlerts: number;
+  predictedFailures: number;
+  callsInProgress: number;
 }
 
 export default function AlertSystem() {
@@ -38,10 +38,10 @@ export default function AlertSystem() {
   const [activityLogs, setActivityLogs] = useState<ActivityLogEntry[]>([]);
   const [filter, setFilter] = useState<'all' | 'critical' | 'medium' | 'low'>('all');
   const [statistics, setStatistics] = useState<Statistics>({
-    alertsLastHour: 0,
-    vehiclesScheduled: 0,
-    callsCompleted: 0,
-    manufacturingInsights: 0
+    totalAlerts: 0,
+    criticalAlerts: 0,
+    predictedFailures: 0,
+    callsInProgress: 0
   });
   const [toastAlert, setToastAlert] = useState<Alert | null>(null);
   const [counters, setCounters] = useState({
@@ -69,7 +69,8 @@ export default function AlertSystem() {
       // Update statistics
       setStatistics(prev => ({
         ...prev,
-        alertsLastHour: prev.alertsLastHour + 1
+        totalAlerts: prev.totalAlerts + 1,
+        criticalAlerts: newAlert.alertType === 'critical' ? prev.criticalAlerts + 1 : prev.criticalAlerts
       }));
     };
 
@@ -109,7 +110,7 @@ export default function AlertSystem() {
               logMessage = `Appointment booked for ${alert.vehicleModel}`;
               setStatistics(prev => ({ 
                 ...prev, 
-                vehiclesScheduled: prev.vehiclesScheduled + 1,
+                predictedFailures: prev.predictedFailures + 1,
                 callsInProgress: Math.max(0, prev.callsInProgress - 1)
               }));
               break;
@@ -253,7 +254,7 @@ export default function AlertSystem() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
               <div className="text-blue-400 text-xs mb-1">Alerts (1hr)</div>
-              <div className="text-2xl font-bold text-white">{statistics.alertsLastHour}</div>
+              <div className="text-2xl font-bold text-white">{statistics.totalAlerts}</div>
             </div>
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
               <div className="text-green-400 text-xs mb-1">Scheduled</div>
