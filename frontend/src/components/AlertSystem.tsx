@@ -31,6 +31,9 @@ interface Statistics {
   criticalAlerts: number;
   predictedFailures: number;
   callsInProgress: number;
+  callsCompleted: number;
+  vehiclesScheduled: number;
+  manufacturingInsights: number;
 }
 
 export default function AlertSystem() {
@@ -41,7 +44,10 @@ export default function AlertSystem() {
     totalAlerts: 0,
     criticalAlerts: 0,
     predictedFailures: 0,
-    callsInProgress: 0
+    callsInProgress: 0,
+    callsCompleted: 0,
+    vehiclesScheduled: 0,
+    manufacturingInsights: 0
   });
   const [toastAlert, setToastAlert] = useState<Alert | null>(null);
   const [counters, setCounters] = useState({
